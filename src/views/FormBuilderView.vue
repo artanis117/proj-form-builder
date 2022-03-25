@@ -5,6 +5,42 @@
                 Field Builder
             </div>
             <div class="form-builder-content">
+                <!-- Mock data switcher -->
+                <div class="form-row">
+                    <div class="form-label">
+                    </div>
+                    <div class="form-field">
+                        <input type="radio"
+                            id="use-mock"
+                            name="request_type"
+                            :value="true"
+                            v-model="use_mocks" />
+                        <label for="use-mock">Use mocked requests (recommended)</label>
+                        <input type="radio"
+                            id="use-real"
+                            name="request_type"
+                            :value="false"
+                            v-model="use_mocks" />
+                        <label for="use-real">Use real requests</label>
+                    </div>
+                </div>
+                <!-- Can only work when mocks are enabled -->
+                <div class="form-row">
+                    <div class="form-label">
+                        <label for="form-fields-select">Form Fields</label>
+                    </div>
+                    <div class="form-field">
+                        <select id="form-fields-select" v-model="selected_form_field_id">
+                            <option value="">Choose a form field...</option>
+                            <option v-for="mocked_form_field in mocked_form_fields"
+                                :key="mocked_form_field.id"
+                                :value="mocked_form_field.id">
+                                {{ mocked_form_field.label }}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <!-- The form for handling the form field save -->
                 <div class="form-row">
                     <div class="form-label">
                         <label for="label">A Value is required</label>
@@ -15,6 +51,7 @@
                                 id="label"
                                 type="text"
                                 v-model="form.label"
+                                @input="is_form_label_touched = true"
                                 :class="{ error: !is_valid_label }" />
                             </div>
                         <div v-if="!is_valid_label" class="form-error">
@@ -76,12 +113,11 @@
 
 <script>
     import { mapActions } from 'vuex'
+    import { Http } from '@/classes/Http'
     import ButtonComponent from '@/components/utils/ButtonComponent'
     import ChoiceEditorComponent from '@/components/forms/ChoiceEditorComponent'
     import mockedFormFields from '@/api/mocks/mockedFormFields'
-    import { USE_MOCK_DATA, MAXIMUM_NUMBER_OF_CHOICES } from '@/api/config'
-    
-    const TEST_ID = 1
+    import { USE_MOCK_DATA_BY_DEFAULT, MAXIMUM_NUMBER_OF_CHOICES } from '@/api/config'
 
     export default {
         name: 'form-builder-view',
@@ -94,15 +130,19 @@
                 form: {},
                 rerender: 0,
                 valid_choice_max: MAXIMUM_NUMBER_OF_CHOICES,
-                is_form_reset: false
+                is_form_reset: false,
+                selected_form_field_id: '',
+                is_form_label_touched: false,
+                mocked_form_fields: mockedFormFields,
+                use_mocks: USE_MOCK_DATA_BY_DEFAULT
             }
         },
         computed: {
+            is_valid_label() {
+                return !this.is_form_label_touched || !!this.form.label
+            },
             is_valid_choices() {
                 return !this.form.choices || this.form.choices.length <= this.valid_choice_max
-            },
-            is_valid_label() {
-                return !!this.form.label
             }
         },
         methods: {
@@ -126,24 +166,28 @@
                     })
                 }
             },
-            handleFormReset() {
-                this.is_form_reset = true
+            resetForm() {
                 this.form.choices = []
                 this.form.label = ''
                 this.form.required = false
                 this.form.default = ''
                 this.form.displayAlpha = false
                 this.form.choices_order = false
+                this.is_form_label_touched = false
                 this.rerender++
+            },
+            handleFormReset() {
+                this.resetForm()
+                this.is_form_reset = true
                 localStorage.clear()
             },
             loadFormBuilder(data) {
                 this.form = { ...data }
                 this.rerender++
             },
-            fetchFormBuilder() {
-                this.getFormBuilder(TEST_ID).then((response) => {
-                    this.loadFormBuilder(response.data)
+            fetchFormBuilder(id) {
+                this.getFormBuilder(id).then((response) => {
+                    this.loadFormBuilder(response)
                 }).catch((err) => {
                     console.log('REQUEST ERROR CAUGHT:', err)
                 })
@@ -171,19 +215,36 @@
                     this.is_form_reset = false
                 },
                 deep: true
+            },
+            use_mocks(newValue, oldValue) {
+                if(newValue) {
+                    console.log('STARTTTTT')
+                    Http.startMock()
+                } else {
+                    console.log('STOPPPPPPP')
+                    Http.stopMock()
+                }
+            },
+            selected_form_field_id(newValue, oldValue) {
+                if (newValue) {
+                    if (this.use_mocks) {
+                        // simulate request
+                        this.fetchFormBuilder(newValue)
+                    } else {
+                        // get directly from the mocks
+                        this.loadFormBuilder(this.mocked_form_fields.find(i => i.id === newValue))
+                    }
+                    
+                } else {
+                    this.resetForm()
+                }
             }
         },
         mounted() {
             const data = this.getBuilderFormLocally()
             if (data) {
                 this.loadFormBuilder(data)
-            } else if (USE_MOCK_DATA) {
-                this.fetchFormBuilder()
-            } else {
-                // there is no endpoint for fetching any initial data
-                this.loadFormBuilder(mockedFormFields[0])
             }
-            
         }
     }
 </script>
@@ -218,7 +279,7 @@
                     align-items: center;
                     flex-direction: row;
                     &.align-top {
-                    align-items: flex-start;
+                        align-items: flex-start;
                     }
                     label {
                         cursor: pointer;
@@ -229,16 +290,21 @@
                     }
                     .form-field {
                         flex: 1;
-                        input[type=checkbox] {
+                        input[type=checkbox],
+                        input[type=radio]:nth-child(3) {
                             display: inline-block;
                             margin-left: 1rem;
                         }
-                        input[type=text] {
+                        input[type=text],
+                        select {
                             padding: 0.3rem 0.5rem;
                             color: var(--black);
                             border-radius: 5px;
                             border: 1px solid gray;
                             width: calc(100% - 1.2rem);
+                        }
+                        select {
+                            width: 100%;
                         }
                         .error {
                             border: 1px solid red !important;
@@ -273,6 +339,10 @@
                         flex-direction: column;
                         .form-label, .form-field {
                             width: 100%;
+                            input[type=radio] {
+                                margin-left: 0 !important;
+                                margin-top: 0.5rem;
+                            }
                         }
                         .form-field.actions a {
                             margin-top: 1.5rem;

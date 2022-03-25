@@ -1,8 +1,37 @@
 export default [
     {
         "id": 1,
-        "label": "Sales region",
+        "label": "First region",
         "required": false,
+        "choices": [
+            "Australia",
+            "United State",
+            "Canada",
+            "Mexico",
+            "Brazil",
+        ],
+        "displayAlpha": true,
+        "default": "North America"
+    },
+    {
+        "id": 2,
+        "label": "Second region",
+        "required": true,
+        "choices": [
+            "Albania",
+            "Bulgaria",
+            "France",
+            "Germany",
+            "Belgium",
+            "Spain",
+        ],
+        "displayAlpha": false,
+        "default": "Bulgaria"
+    },
+    {
+        "id": 3,
+        "label": "Third region",
+        "required": true,
         "choices": [
             "Asia",
             "Australia",
@@ -10,7 +39,7 @@ export default [
             "North America",
             "Eastern Europe",
             "Latin America",
-            "Middle East and Africa"
+            "Middle East and Africa",
         ],
         "displayAlpha": true,
         "default": "North America"

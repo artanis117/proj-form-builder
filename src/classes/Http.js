@@ -1,17 +1,21 @@
 import axios from 'axios'
 
 import HttpMockApis from '@/api/mocks/HttpMockApis'
-import { USE_MOCK_DATA } from '@/api/config'
+import { USE_MOCK_DATA_BY_DEFAULT } from '@/api/config'
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
 axios.defaults.withCredentials = true
 
-if (USE_MOCK_DATA) {
-    new HttpMockApis(axios)
-}
-
 class Http {
+    static startMock() {
+        httpMockApis.startMock()
+    }
+
+    static stopMock() {
+        httpMockApis.stopMock()
+    }
+
     static get(properties) {
         return axios({
             method: 'get',
@@ -53,6 +57,9 @@ class Http {
         })
     }
 }
+
+const httpMockApis = new HttpMockApis(axios)
+if (USE_MOCK_DATA_BY_DEFAULT) { Http.startMock() }
 
 export {
     Http
