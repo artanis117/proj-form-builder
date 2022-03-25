@@ -1,7 +1,7 @@
 import MockAdapter from 'axios-mock-adapter'
 import Status from '@/classes/Status'
 import mockedFormFields from '@/api/mocks/mockedFormFields'
-import { GET_API_URL, POST_API_URL } from '@/api/config'
+import { GET_API_URL, POST_API_URL, MOCK_DELAY } from '@/api/config'
 
 export default class HttpMockApis {
     constructor(axios) {
@@ -9,7 +9,7 @@ export default class HttpMockApis {
     }
 
     startMock() {
-        this.mock = new MockAdapter(this.axios, { delayResponse: 500 })
+        this.mock = new MockAdapter(this.axios, { delayResponse: MOCK_DELAY })
         this.getFormFields()
         this.saveFormFields()
     }

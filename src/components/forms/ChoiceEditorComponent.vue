@@ -7,7 +7,7 @@
         <div v-if="all_choices.length" class="choices-list">
             <div v-for="(choice, index) in all_choices"
                 :key="index">
-                <span v-character-detector>{{ choice }}</span>
+                <span v-character-detector="max_choice_length">{{ choice }}</span>
                 <a @click="removeChoice(choice)">remove</a>
             </div>
         </div>
@@ -17,6 +17,7 @@
 <script>
     import { CharacterDetector } from '@/directives/directives'
     import ButtonComponent from '@/components/utils/ButtonComponent'
+    import { MAX_CHOICE_LENGTH } from '@/api/config'
 
     export default {
         name: 'choice-editor-component',
@@ -39,7 +40,8 @@
         data() {
             return {
                 all_choices: [],
-                new_choice: ''
+                new_choice: '',
+                max_choice_length: MAX_CHOICE_LENGTH
             }
         },
         methods: {

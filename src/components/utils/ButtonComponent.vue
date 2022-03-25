@@ -33,8 +33,7 @@
         color: white;
         font-weight: bold;
         border-radius: 5px;
-        border: 1px solid #52B153;
-        background: #5BB85B;
+        background: var(--color1);
         cursor: pointer;
         &.big {
             padding: 0.5rem 1rem;
