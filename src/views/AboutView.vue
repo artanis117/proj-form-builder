@@ -11,8 +11,8 @@
                 <div><strong>External libraries:</strong> axios (used for AJAX requests) and axios-mock-adapter</div>
                 <div>
                     <strong>Configuration:</strong> You can change values in config.js to achieve different results.
-                    You can choose whether to mock the the requests or not. It is mocked by default.
-                    When using mocks the data can actually change with real requests that is not the case, because such requests does not exist.
+                    You can choose whether to mock the requests or not. It is mocked by default and is recommended for better results.
+                    When using mocks the data can actually change with real requests that is not the case, because such requests do not exist yet.
                     You can choose another value for maximum number of choices. By default it is 50.
                 </div>
                 <div>
